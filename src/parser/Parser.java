@@ -1,7 +1,10 @@
 package parser;
 
-import scanner.Scanner;
+import java.util.ArrayList;
+
+import ast.*;
 import scanner.LexicalException;
+import scanner.Scanner;
 import token.Token;
 import token.TokenType;
 
@@ -12,8 +15,8 @@ public class Parser {
         this.scanner = scanner;
     }
 
-    public void parse() throws SyntacticException {
-        this.parsePrg();
+    public NodeProgram parse() throws SyntacticException {
+        return this.parsePrg();
     }
 
     private Token match(TokenType type) throws SyntacticException {
@@ -27,7 +30,7 @@ public class Parser {
         }
     }
 
-    private void parsePrg() throws SyntacticException {
+    private NodeProgram parsePrg() throws SyntacticException {
         Token tk = peekTokenWrapper();
         switch (tk.getType()) {
             case TYFLOAT:
@@ -36,9 +39,9 @@ public class Parser {
             case PRINT:
             case EOF:
                 // 0. Prg -> DSs $
-                parseDSs();
+                ArrayList<NodeAST> decSts = parseDSs();
                 match(TokenType.EOF);
-                return;
+                return new NodeProgram(decSts);
             default:
                 throw new SyntacticException(
                     "Token " + tk.getType() + " alla riga " + tk.getRiga() + " non e' inizio di programma"
@@ -46,24 +49,26 @@ public class Parser {
         }
     }
 
-    private void parseDSs() throws SyntacticException {
+    private ArrayList<NodeAST> parseDSs() throws SyntacticException {
         Token tk = peekTokenWrapper();
         switch (tk.getType()) {
             case TYFLOAT:
             case TYINT:
                 // 1. DSs -> Dcl DSs
-                parseDcl();
-                parseDSs();
-                return;
+                NodeDecl decl = parseDcl();
+                ArrayList<NodeAST> listDcl = parseDSs();
+                listDcl.add(0, decl); // Inserisco in testa per mantenere l'ordine delle istruzioni
+                return listDcl;
             case ID:
             case PRINT:
                 // 2. DSs -> Stm DSs
-                parseStm();
-                parseDSs();
-                return;
+                NodeStm stm = parseStm();
+                ArrayList<NodeAST> listStm = parseDSs();
+                listStm.add(0, stm);
+                return listStm;
             case EOF:
                 // 3. DSs -> eps
-                return;
+                return new ArrayList<>(); // Ritorno lista vuota alla fine delle dichiarazioni/istruzioni
             default:
                 throw new SyntacticException(
                     "Errore Sintattico: token inatteso " + tk.getType() + " alla riga " + tk.getRiga()
@@ -71,185 +76,199 @@ public class Parser {
         }
     }
 
-    private void parseDcl() throws SyntacticException {
+    private NodeDecl parseDcl() throws SyntacticException {
         Token tk = peekTokenWrapper();
         switch (tk.getType()) {
             case TYFLOAT:
             case TYINT:
                 // 4. Dcl -> Ty id DclP
-                parseTy();
-                match(TokenType.ID);
-                parseDclP();
-                return;
+                LangType type = parseTy();
+                Token idTk = match(TokenType.ID);
+                NodeId id = new NodeId(idTk.getVal());
+                NodeExpr init = parseDclP();
+                return new NodeDecl(id, type, init);
             default:
                 throw new SyntacticException("Errore Sintattico alla riga " + tk.getRiga());
         }
     }
 
-    private void parseTy() throws SyntacticException {
+    private LangType parseTy() throws SyntacticException {
         Token tk = peekTokenWrapper();
         switch (tk.getType()) {
             case TYFLOAT:
                 // 17. Ty -> float
                 match(TokenType.TYFLOAT);
-                return;
+                return LangType.FLOAT;
             case TYINT:
                 // 18. Ty -> int
                 match(TokenType.TYINT);
-                return;
+                return LangType.INT;
             default:
                 throw new SyntacticException("Errore Sintattico alla riga " + tk.getRiga());
         }
     }
 
-    private void parseDclP() throws SyntacticException {
+    private NodeExpr parseDclP() throws SyntacticException {
         Token tk = peekTokenWrapper();
         switch (tk.getType()) {
             case SEMI:
                 // 5. DclP -> ;
                 match(TokenType.SEMI);
-                return;
+                return null; // Nessuna espressione di inizializzazione
             case ASSIGN:
                 // 6. DclP -> = Exp;
                 match(TokenType.ASSIGN);
-                parseExp();
+                NodeExpr exp = parseExp();
                 match(TokenType.SEMI);
-                return;
+                return exp;
             default:
                 throw new SyntacticException("Errore Sintattico alla riga " + tk.getRiga() + ": atteso ';' o '='");
         }
     }
 
-    private void parseStm() throws SyntacticException {
+    private NodeStm parseStm() throws SyntacticException {
         Token tk = peekTokenWrapper();
         switch (tk.getType()) {
             case ID:
                 // 7. Stm -> id Op Exp;
-                match(TokenType.ID);
-                parseOp();
-                parseExp();
+                Token idTk = match(TokenType.ID);
+                NodeId id = new NodeId(idTk.getVal());
+                Token opTk = parseOp(); 
+                NodeExpr exp = parseExp();
                 match(TokenType.SEMI);
-                return;
+                
+                // Se è un operatore opAss (+=, -=, *=, /=), creiamo un'espressione binaria
+                // In questo modo nell'albero traduciamo 'a += 5' in 'a = a + 5'
+                if (opTk.getType() == TokenType.OP_ASSIGN) {
+                    String opVal = opTk.getVal();
+                    LangOper oper = null;
+                    if (opVal.equals("+=")) oper = LangOper.PLUS;
+                    else if (opVal.equals("-=")) oper = LangOper.MINUS;
+                    else if (opVal.equals("*=")) oper = LangOper.TIMES;
+                    else if (opVal.equals("/=")) oper = LangOper.DIVIDE;
+                    
+                    NodeBinOp binOp = new NodeBinOp(oper, new NodeDeref(id), exp);
+                    return new NodeAssign(id, binOp);
+                } else {
+                    // Assegnamento standard: '='
+                    return new NodeAssign(id, exp);
+                }
             case PRINT:
                 // 8. Stm -> print id;
                 match(TokenType.PRINT);
-                match(TokenType.ID);
+                Token printIdTk = match(TokenType.ID);
                 match(TokenType.SEMI);
-                return;
+                return new NodePrint(new NodeId(printIdTk.getVal()));
             default:
                 throw new SyntacticException("Errore Sintattico alla riga " + tk.getRiga());
         }
     }
 
-    private void parseExp() throws SyntacticException {
+    private NodeExpr parseExp() throws SyntacticException {
         Token tk = peekTokenWrapper();
         switch (tk.getType()) {
             case ID:
             case FLOAT:
             case INT:
                 // 9. Exp -> Tr ExpP
-                parseTr();
-                parseExpP();
-                return;
+                NodeExpr left = parseTr();
+                return parseExpP(left);
             default:
                 throw new SyntacticException("Errore Sintattico nell'espressione alla riga " + tk.getRiga());
         }
     }
 
-    private void parseExpP() throws SyntacticException {
+    private NodeExpr parseExpP(NodeExpr left) throws SyntacticException {
         Token tk = peekTokenWrapper();
         switch (tk.getType()) {
             case PLUS:
                 // 10. ExpP -> + Tr ExpP
                 match(TokenType.PLUS);
-                parseTr();
-                parseExpP();
-                return;
+                NodeExpr rightPlus = parseTr();
+                NodeBinOp binOpPlus = new NodeBinOp(LangOper.PLUS, left, rightPlus);
+                return parseExpP(binOpPlus);
             case MINUS:
                 // 11. ExpP -> - Tr ExpP
                 match(TokenType.MINUS);
-                parseTr();
-                parseExpP();
-                return;
+                NodeExpr rightMinus = parseTr();
+                NodeBinOp binOpMinus = new NodeBinOp(LangOper.MINUS, left, rightMinus);
+                return parseExpP(binOpMinus);
             case SEMI:
                 // 12. ExpP -> eps
-                return;
+                return left; 
             default:
                 throw new SyntacticException("Errore Sintattico alla riga " + tk.getRiga());
         }
     }
 
-    private void parseTr() throws SyntacticException {
+    private NodeExpr parseTr() throws SyntacticException {
         Token tk = peekTokenWrapper();
         switch (tk.getType()) {
             case ID:
             case FLOAT:
             case INT:
                 // 13. Tr -> Val TrP
-                parseVal();
-                parseTrP();
-                return;
+                NodeExpr left = parseVal();
+                return parseTrP(left);
             default:
                 throw new SyntacticException("Errore Sintattico alla riga " + tk.getRiga());
         }
     }
 
-    private void parseTrP() throws SyntacticException {
+    private NodeExpr parseTrP(NodeExpr left) throws SyntacticException {
         Token tk = peekTokenWrapper();
         switch (tk.getType()) {
             case TIMES:
                 // 14. TrP -> * Val TrP
                 match(TokenType.TIMES);
-                parseVal();
-                parseTrP();
-                return;
+                NodeExpr rightTimes = parseVal();
+                NodeBinOp binOpTimes = new NodeBinOp(LangOper.TIMES, left, rightTimes);
+                return parseTrP(binOpTimes);
             case DIVIDE:
                 // 15. TrP -> / Val TrP
                 match(TokenType.DIVIDE);
-                parseVal();
-                parseTrP();
-                return;
+                NodeExpr rightDivide = parseVal();
+                NodeBinOp binOpDivide = new NodeBinOp(LangOper.DIVIDE, left, rightDivide);
+                return parseTrP(binOpDivide);
             case MINUS:
             case PLUS:
             case SEMI:
                 // 16. TrP -> eps
-                return;
+                return left; 
             default:
                 throw new SyntacticException("Errore Sintattico alla riga " + tk.getRiga());
         }
     }
 
-    private void parseVal() throws SyntacticException {
+    private NodeExpr parseVal() throws SyntacticException {
         Token tk = peekTokenWrapper();
         switch (tk.getType()) {
             case INT:
                 // 19. Val -> intVal
-                match(TokenType.INT);
-                return;
+                Token intTk = match(TokenType.INT);
+                return new NodeCost(intTk.getVal(), LangType.INT);
             case FLOAT:
                 // 20. Val -> floatVal
-                match(TokenType.FLOAT);
-                return;
+                Token floatTk = match(TokenType.FLOAT);
+                return new NodeCost(floatTk.getVal(), LangType.FLOAT);
             case ID:
                 // 21. Val -> id
-                match(TokenType.ID);
-                return;
+                Token idTk = match(TokenType.ID);
+                return new NodeDeref(new NodeId(idTk.getVal()));
             default:
                 throw new SyntacticException("Valore non valido alla riga " + tk.getRiga());
         }
     }
 
-    private void parseOp() throws SyntacticException {
+    private Token parseOp() throws SyntacticException {
         Token tk = peekTokenWrapper();
         switch (tk.getType()) {
             case ASSIGN:
                 // 22. Op -> =
-                match(TokenType.ASSIGN);
-                return;
+                return match(TokenType.ASSIGN);
             case OP_ASSIGN:
                 // 23. Op -> opAss
-                match(TokenType.OP_ASSIGN);
-                return;
+                return match(TokenType.OP_ASSIGN);
             default:
                 throw new SyntacticException("Operatore non valido alla riga " + tk.getRiga());
         }
