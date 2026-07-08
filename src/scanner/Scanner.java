@@ -15,6 +15,7 @@ public class Scanner {
 	final char EOF = (char) -1; 
 	private int riga;
 	private PushbackReader buffer;
+	private Token nextTk; // Campo aggiunto per la gestione di peekToken()
 
 	// skpChars: insieme caratteri di skip (include EOF) e inizializzazione
 	private Set<Character> skpChars;
@@ -36,6 +37,7 @@ public class Scanner {
 
 		this.buffer = new PushbackReader(new FileReader(fileName));
 		riga = 1;
+		this.nextTk = null; // Inizializzazione del nuovo campo
 		
 		// Inizializzare campi che non hanno inizializzazione
 		
@@ -73,6 +75,13 @@ public class Scanner {
 	}
 	
 	public Token nextToken() throws LexicalException {
+		// Se nextTk e' valorizzato, lo restituisco e lo resetto a null
+		if (nextTk != null) {
+			Token token = nextTk;
+			nextTk = null;
+			return token;
+		}
+
 		try {
 			// nextChar contiene il prossimo carattere dell'input (non consumato).
 			char nextChar = peekChar(); 
@@ -127,6 +136,14 @@ public class Scanner {
 			// Catturate l'eccezione IOException e ritornate una LexicalException che la contiene
 			throw new LexicalException("Errore di I/O durante la lettura: " + e.getMessage());
 		}
+	}
+
+	// Metodo peekToken aggiunto secondo le istruzioni
+	public Token peekToken() throws LexicalException {
+		if (nextTk == null) {
+			nextTk = nextToken();
+		}
+		return nextTk;
 	}
 
 	private Token scanId() throws IOException {
