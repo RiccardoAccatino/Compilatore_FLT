@@ -1,5 +1,5 @@
 package ast;
-
+import visitor.IVisitor;
 public class NodeDecl extends NodeStm {
     private NodeId id;
     private LangType type;
@@ -19,6 +19,10 @@ public class NodeDecl extends NodeStm {
         return type;
     }
 
+    @Override
+    public void accept(IVisitor visitor) {
+        visitor.visit(this);
+    }
     public NodeExpr getInit() {
         return init;
     }

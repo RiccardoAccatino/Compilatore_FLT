@@ -1,5 +1,5 @@
 package ast;
-
+import visitor.IVisitor;
 import java.util.ArrayList;
 
 public class NodeProgram extends NodeAST {
@@ -13,6 +13,10 @@ public class NodeProgram extends NodeAST {
         return decSts;
     }
 
+    @Override
+    public void accept(IVisitor visitor) {
+        visitor.visit(this);
+    }
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder("NodeProgram:\n");

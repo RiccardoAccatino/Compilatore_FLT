@@ -1,5 +1,5 @@
 package ast;
-
+import visitor.IVisitor;
 public class NodeId extends NodeAST {
     private String name;
 
@@ -9,6 +9,10 @@ public class NodeId extends NodeAST {
 
     public String getName() {
         return name;
+    }
+    @Override
+    public void accept(IVisitor visitor) {
+        visitor.visit(this);
     }
 
     @Override
