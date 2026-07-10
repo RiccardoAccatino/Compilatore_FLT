@@ -81,17 +81,16 @@ public class Parser {
         switch (tk.getType()) {
             case TYFLOAT:
             case TYINT:
-                // 4. Dcl -> Ty id DclP
+                
                 LangType type = parseTy();
                 Token idTk = match(TokenType.ID);
-                NodeId id = new NodeId(idTk.getVal());
+                NodeId id = new NodeId(idTk.getValore());
                 NodeExpr init = parseDclP();
                 return new NodeDecl(id, type, init);
             default:
                 throw new SyntacticException("Errore Sintattico alla riga " + tk.getRiga());
         }
     }
-
     private LangType parseTy() throws SyntacticException {
         Token tk = peekTokenWrapper();
         switch (tk.getType()) {
@@ -132,7 +131,7 @@ public class Parser {
             case ID:
                 // 7. Stm -> id Op Exp;
                 Token idTk = match(TokenType.ID);
-                NodeId id = new NodeId(idTk.getVal());
+                NodeId id = new NodeId(idTk.getValore());
                 Token opTk = parseOp(); 
                 NodeExpr exp = parseExp();
                 match(TokenType.SEMI);
@@ -140,7 +139,7 @@ public class Parser {
                 // Se è un operatore opAss (+=, -=, *=, /=), creiamo un'espressione binaria
                 // In questo modo nell'albero traduciamo 'a += 5' in 'a = a + 5'
                 if (opTk.getType() == TokenType.OP_ASSIGN) {
-                    String opVal = opTk.getVal();
+                    String opVal = opTk.getValore();
                     LangOper oper = null;
                     if (opVal.equals("+=")) oper = LangOper.PLUS;
                     else if (opVal.equals("-=")) oper = LangOper.MINUS;
@@ -158,7 +157,7 @@ public class Parser {
                 match(TokenType.PRINT);
                 Token printIdTk = match(TokenType.ID);
                 match(TokenType.SEMI);
-                return new NodePrint(new NodeId(printIdTk.getVal()));
+                return new NodePrint(new NodeId(printIdTk.getValore()));
             default:
                 throw new SyntacticException("Errore Sintattico alla riga " + tk.getRiga());
         }
@@ -244,17 +243,17 @@ public class Parser {
         Token tk = peekTokenWrapper();
         switch (tk.getType()) {
             case INT:
-                // 19. Val -> intVal
+                
                 Token intTk = match(TokenType.INT);
-                return new NodeCost(intTk.getVal(), LangType.INT);
+                return new NodeCost(intTk.getValore(), LangType.INT);
             case FLOAT:
-                // 20. Val -> floatVal
+                
                 Token floatTk = match(TokenType.FLOAT);
-                return new NodeCost(floatTk.getVal(), LangType.FLOAT);
+                return new NodeCost(floatTk.getValore(), LangType.FLOAT);
             case ID:
-                // 21. Val -> id
+                
                 Token idTk = match(TokenType.ID);
-                return new NodeDeref(new NodeId(idTk.getVal()));
+                return new NodeDeref(new NodeId(idTk.getValore()));
             default:
                 throw new SyntacticException("Valore non valido alla riga " + tk.getRiga());
         }
