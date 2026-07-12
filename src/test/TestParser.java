@@ -52,7 +52,6 @@ public class TestParser {
 
     @Test
     void testParserEcc_0() {
-        // Contenuto: " a ;"
         assertThrows(SyntacticException.class, () -> {
             Scanner s = new Scanner(FOLDER_PATH + "testParserEcc_0.txt");
             Parser p = new Parser(s);
@@ -62,7 +61,6 @@ public class TestParser {
 
     @Test
     void testParserEcc_1() {
-        // Contenuto: "int a;\r\na = 5 + * 3;"
         assertThrows(SyntacticException.class, () -> {
             Scanner s = new Scanner(FOLDER_PATH + "testParserEcc_1.txt");
             Parser p = new Parser(s);
@@ -72,7 +70,6 @@ public class TestParser {
 
     @Test
     void testParserEcc_2() {
-        // Contenuto: "\r\na = 5;\r\n1 a;"
         assertThrows(SyntacticException.class, () -> {
             Scanner s = new Scanner(FOLDER_PATH + "testParserEcc_2.txt");
             Parser p = new Parser(s);
@@ -82,7 +79,6 @@ public class TestParser {
 
     @Test
     void testParserEcc_3() {
-        // Contenuto: "int a;\r\na + 5;"
         assertThrows(SyntacticException.class, () -> {
             Scanner s = new Scanner(FOLDER_PATH + "testParserEcc_3.txt");
             Parser p = new Parser(s);
@@ -92,7 +88,6 @@ public class TestParser {
 
     @Test
     void testParserEcc_4() {
-        // Contenuto: "int a;\r\nprint 1;"
         assertThrows(SyntacticException.class, () -> {
             Scanner s = new Scanner(FOLDER_PATH + "testParserEcc_4.txt");
             Parser p = new Parser(s);
@@ -102,7 +97,6 @@ public class TestParser {
 
     @Test
     void testParserEcc_5() {
-        // Contenuto: "int a;\r\na = 5;\r\nfloat 4;"
         assertThrows(SyntacticException.class, () -> {
             Scanner s = new Scanner(FOLDER_PATH + "testParserEcc_5.txt");
             Parser p = new Parser(s);
@@ -112,7 +106,6 @@ public class TestParser {
 
     @Test
     void testParserEcc_6() {
-        // Contenuto: "int float;"
         assertThrows(SyntacticException.class, () -> {
             Scanner s = new Scanner(FOLDER_PATH + "testParserEcc_6.txt");
             Parser p = new Parser(s);
@@ -122,7 +115,6 @@ public class TestParser {
 
     @Test
     void testParserEcc_7() {
-        // Contenuto: "float = 3.5;"
         assertThrows(SyntacticException.class, () -> {
             Scanner s = new Scanner(FOLDER_PATH + "testParserEcc_7.txt");
             Parser p = new Parser(s);

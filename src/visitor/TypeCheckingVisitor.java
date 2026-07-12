@@ -19,11 +19,10 @@ public class TypeCheckingVisitor implements IVisitor {
     @Override
     public void visit(NodeProgram node) {
         resType = new TypeDescriptor(TipoTD.OK);
-        // Si itera su tutti i figli del programma [cite: 180, 181]
         for (NodeAST decSt : node.getDecSts()) {
             decSt.accept(this);
             if (resType.getTipo() == TipoTD.ERROR) {
-                return; // Propaga l'errore e interrompi [cite: 167, 175]
+                return;
             }
         }
     }
@@ -33,7 +32,7 @@ public class TypeCheckingVisitor implements IVisitor {
         String id = node.getId().getName();
         
         if (SymbolTable.lookup(id) != null) {
-            setError("Errore: Variabile '" + id + "' gia' definita."); // [cite: 166, 167]
+            setError("Errore: Variabile '" + id + "' gia' definita.");
             return;
         }
 
@@ -46,16 +45,15 @@ public class TypeCheckingVisitor implements IVisitor {
             TypeDescriptor tipoInit = resType;
 
             if (tipoInit.getTipo() == TipoTD.ERROR) {
-                return; // Propaga l'errore
+                return;
             }
 
             if (!tipoDichiarato.compatibile(tipoInit)) {
-                setError("Errore: Inizializzazione incompatibile per '" + id + "'."); // [cite: 167]
+                setError("Errore: Inizializzazione incompatibile per '" + id + "'.");
                 return;
             }
         }
 
-        // Inserimento degli attributi nella Symbol Table [cite: 165]
         SymbolTable.enter(id, new Attributes(node.getType()));
         resType = new TypeDescriptor(TipoTD.OK);
     }
@@ -66,7 +64,7 @@ public class TypeCheckingVisitor implements IVisitor {
         Attributes attr = SymbolTable.lookup(id);
 
         if (attr == null) {
-            setError("Errore: Variabile '" + id + "' non dichiarata."); // [cite: 169, 170]
+            setError("Errore: Variabile '" + id + "' non dichiarata.");
             return;
         }
 
@@ -82,7 +80,7 @@ public class TypeCheckingVisitor implements IVisitor {
         }
 
         if (!tipoVar.compatibile(tipoExpr)) {
-            setError("Errore: Assegnamento di tipo incompatibile per '" + id + "'."); // [cite: 169, 170]
+            setError("Errore: Assegnamento di tipo incompatibile per '" + id + "'.");
             return;
         }
 
@@ -94,7 +92,7 @@ public class TypeCheckingVisitor implements IVisitor {
         String id = node.getId().getName();
         
         if (SymbolTable.lookup(id) == null) {
-            setError("Errore: Variabile '" + id + "' non dichiarata nella stampa."); // [cite: 168, 170]
+            setError("Errore: Variabile '" + id + "' non dichiarata nella stampa.");
             return;
         }
         resType = new TypeDescriptor(TipoTD.OK);
@@ -114,25 +112,24 @@ public class TypeCheckingVisitor implements IVisitor {
         }
 
         if (leftTD.getTipo() == TipoTD.INT && rightTD.getTipo() == TipoTD.INT) {
-            resType = new TypeDescriptor(TipoTD.INT); // [cite: 175]
+            resType = new TypeDescriptor(TipoTD.INT);
         } else {
-            resType = new TypeDescriptor(TipoTD.FLOAT); // [cite: 175]
+            resType = new TypeDescriptor(TipoTD.FLOAT);
             if (node.getOp() == LangOper.DIVIDE) {
-                node.setOp(LangOper.DIV_FLOAT); // Modifica l'operatore se e' divisione mista [cite: 175]
+                node.setOp(LangOper.DIV_FLOAT);
             }
         }
     }
 
     @Override
     public void visit(NodeDeref node) {
-        // Il tipo di un NodeDeref e' uguale a quello del NodeId contenuto [cite: 174]
         node.getId().accept(this); 
     }
 
     @Override
     public void visit(NodeCost node) {
         resType = new TypeDescriptor(
-            node.getType() == LangType.INT ? TipoTD.INT : TipoTD.FLOAT // [cite: 174]
+            node.getType() == LangType.INT ? TipoTD.INT : TipoTD.FLOAT
         );
     }
 

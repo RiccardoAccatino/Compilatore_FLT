@@ -21,17 +21,15 @@ class TestScanner {
 
 	@Test
 	void testNextToken() throws Exception {
-		// Riga 1: int temp;
 		assertEquals(TokenType.TYINT, scanner.nextToken().getType());
 		
 		Token t1 = scanner.nextToken();
 		assertEquals(TokenType.ID, t1.getType());
 		assertEquals("temp", t1.getValore());
-		assertEquals(1, t1.getRiga()); // Verifichiamo anche che la riga sia corretta
+		assertEquals(1, t1.getRiga()); 
 		
 		assertEquals(TokenType.SEMI, scanner.nextToken().getType());
 		
-		// Riga 2: int temp1;
 		assertEquals(TokenType.TYINT, scanner.nextToken().getType());
 		
 		Token t2 = scanner.nextToken();
@@ -40,7 +38,6 @@ class TestScanner {
 		
 		assertEquals(TokenType.SEMI, scanner.nextToken().getType());
 		
-		// Riga 3: temp += 5.;
 		assertEquals(TokenType.ID, scanner.nextToken().getType()); // temp
 		
 		Token t3 = scanner.nextToken();
@@ -53,12 +50,10 @@ class TestScanner {
 		
 		assertEquals(TokenType.SEMI, scanner.nextToken().getType());
 		
-		// Riga 5: float b;
 		assertEquals(TokenType.TYFLOAT, scanner.nextToken().getType());
 		assertEquals(TokenType.ID, scanner.nextToken().getType()); // b
 		assertEquals(TokenType.SEMI, scanner.nextToken().getType());
 		
-		// Riga 6: b = temp1 + 3.2;
 		assertEquals(TokenType.ID, scanner.nextToken().getType()); // b
 		assertEquals(TokenType.ASSIGN, scanner.nextToken().getType()); // =
 		assertEquals(TokenType.ID, scanner.nextToken().getType()); // temp1
@@ -70,12 +65,10 @@ class TestScanner {
 		
 		assertEquals(TokenType.SEMI, scanner.nextToken().getType());
 		
-		// Riga 7: print b;
 		assertEquals(TokenType.PRINT, scanner.nextToken().getType());
 		assertEquals(TokenType.ID, scanner.nextToken().getType()); // b
 		assertEquals(TokenType.SEMI, scanner.nextToken().getType());
 		
-		// Fine file
 		assertEquals(TokenType.EOF, scanner.nextToken().getType());
 	}
 }

@@ -18,7 +18,7 @@ public class CodeGeneratorVisitor implements IVisitor {
 
     @Override
     public void visit(NodeProgram node) {
-        if (!log.isEmpty()) return; // Continua SOLO se il log è vuoto
+        if (!log.isEmpty()) return; 
 
         StringBuilder sb = new StringBuilder();
         
@@ -26,8 +26,6 @@ public class CodeGeneratorVisitor implements IVisitor {
             child.accept(this);
             
             if (!log.isEmpty()) {
-                // ERRORE RILEVATO: prima di interrompere, salviamo 
-                // tutto il codice generato con successo finora.
                 codiceDc = sb.toString().trim();
                 return; 
             }

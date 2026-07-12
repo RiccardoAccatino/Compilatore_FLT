@@ -3,7 +3,7 @@ import visitor.IVisitor;
 public class NodeDecl extends NodeStm {
     private NodeId id;
     private LangType type;
-    private NodeExpr init; // Può essere null se non inizializzata
+    private NodeExpr init; 
 
     public NodeDecl(NodeId id, LangType type, NodeExpr init) {
         this.id = id;

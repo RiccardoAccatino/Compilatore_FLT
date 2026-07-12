@@ -57,7 +57,7 @@ public class Parser {
                 // 1. DSs -> Dcl DSs
                 NodeDecl decl = parseDcl();
                 ArrayList<NodeAST> listDcl = parseDSs();
-                listDcl.add(0, decl); // Inserisco in testa per mantenere l'ordine delle istruzioni
+                listDcl.add(0, decl);
                 return listDcl;
             case ID:
             case PRINT:
@@ -68,7 +68,7 @@ public class Parser {
                 return listStm;
             case EOF:
                 // 3. DSs -> eps
-                return new ArrayList<>(); // Ritorno lista vuota alla fine delle dichiarazioni/istruzioni
+                return new ArrayList<>(); 
             default:
                 throw new SyntacticException(
                     "Errore Sintattico: token inatteso " + tk.getType() + " alla riga " + tk.getRiga()
@@ -113,7 +113,7 @@ public class Parser {
             case SEMI:
                 // 5. DclP -> ;
                 match(TokenType.SEMI);
-                return null; // Nessuna espressione di inizializzazione
+                return null; 
             case ASSIGN:
                 // 6. DclP -> = Exp;
                 match(TokenType.ASSIGN);
@@ -135,9 +135,6 @@ public class Parser {
                 Token opTk = parseOp(); 
                 NodeExpr exp = parseExp();
                 match(TokenType.SEMI);
-                
-                // Se è un operatore opAss (+=, -=, *=, /=), creiamo un'espressione binaria
-                // In questo modo nell'albero traduciamo 'a += 5' in 'a = a + 5'
                 if (opTk.getType() == TokenType.OP_ASSIGN) {
                     String opVal = opTk.getValore();
                     LangOper oper = null;
@@ -149,7 +146,7 @@ public class Parser {
                     NodeBinOp binOp = new NodeBinOp(oper, new NodeDeref(id), exp);
                     return new NodeAssign(id, binOp);
                 } else {
-                    // Assegnamento standard: '='
+                    
                     return new NodeAssign(id, exp);
                 }
             case PRINT:
@@ -273,8 +270,7 @@ public class Parser {
         }
     }
 
-    // --- METODI DI SUPPORTO PER LA GESTIONE DELLE ECCEZIONI ---
-    
+
     private Token peekTokenWrapper() throws SyntacticException {
         try {
             return scanner.peekToken();

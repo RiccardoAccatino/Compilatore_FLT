@@ -37,9 +37,7 @@ public class Scanner {
 
 		this.buffer = new PushbackReader(new FileReader(fileName));
 		riga = 1;
-		this.nextTk = null; // Inizializzazione del nuovo campo
-		
-		// Inizializzare campi che non hanno inizializzazione
+		this.nextTk = null;
 		
 		skpChars = new HashSet<>();
 		skpChars.add(' ');
@@ -75,7 +73,6 @@ public class Scanner {
 	}
 	
 	public Token nextToken() throws LexicalException {
-		// Se nextTk e' valorizzato, lo restituisco e lo resetto a null
 		if (nextTk != null) {
 			Token token = nextTk;
 			nextTk = null;
@@ -83,11 +80,9 @@ public class Scanner {
 		}
 
 		try {
-			// nextChar contiene il prossimo carattere dell'input (non consumato).
-			char nextChar = peekChar(); 
+     			char nextChar = peekChar(); 
 
-			// Avanza nel buffer leggendo i carattere in skipChars
-			// incrementando riga se leggi '\n'.
+	
 			while (skpChars.contains(nextChar) && nextChar != EOF) {
 				char consumed = readChar();
 				if (consumed == '\n') {
@@ -95,50 +90,30 @@ public class Scanner {
 				}
 				nextChar = peekChar();
 			}
-
-			// Se raggiungi la fine del file ritorna il Token EOF
 			if (nextChar == EOF) {
 				return new Token(TokenType.EOF, riga);
 			}
 
-			// Se nextChar e' in letters
-			// return scanId()
-			// che deve generare o un Token ID o parola chiave
 			if (letters.contains(nextChar)) {
 				return scanId();
 			}
-
-			// Se nextChar e' o in operators oppure delimitatore
-			// ritorna il Token associato con l'operatore o il delimitatore
-			// Attenzione agli operatori di assegnamento!
-			// Se nextChar e' ; o = 
-			// ritorna il Token associato
 			if (operTkType.containsKey(nextChar) || delimTkType.containsKey(nextChar)) {
 				return scanOperator();
 			}
 
-			// Se nextChar e' in numbers
-			// return scanNumber()
-			// che legge sia un intero che un float e ritorna il Token INT o FLOAT
-			// i caratteri che leggete devono essere accumulati in una stringa
-			// che verra' assegnata al campo valore del Token
 			if (digits.contains(nextChar)) {
 				return scanNumber();
 			}
 
-			// Altrimenti il carattere NON E' UN CARATTERE LEGALE sollevate una
-			// eccezione lessicale dicendo la riga e il carattere che la hanno
-			// provocata. 
-			char illegalChar = readChar(); // Consuma il carattere errato per evitare loop infiniti
+			char illegalChar = readChar(); 
 			throw new LexicalException("Carattere non legale '" + illegalChar + "' trovato alla riga " + riga);
 			
 		} catch (IOException e) {
-			// Catturate l'eccezione IOException e ritornate una LexicalException che la contiene
+		
 			throw new LexicalException("Errore di I/O durante la lettura: " + e.getMessage());
 		}
 	}
 
-	// Metodo peekToken aggiunto secondo le istruzioni
 	public Token peekToken() throws LexicalException {
 		if (nextTk == null) {
 			nextTk = nextToken();
@@ -150,7 +125,6 @@ public class Scanner {
 		StringBuilder sb = new StringBuilder();
 		char c = peekChar();
 		
-		// Un ID o Keyword è formato da lettere seguite da lettere o numeri
 		while (letters.contains(c) || digits.contains(c)) {
 			sb.append(readChar());
 			c = peekChar();
@@ -165,12 +139,11 @@ public class Scanner {
 	}
 	
 	private Token scanOperator() throws IOException {
-		char c = readChar(); // Consuma l'operatore o delimitatore
+		char c = readChar(); 
 		
 		if (operTkType.containsKey(c)) {
-			// Gestisce il caso dell'operatore di assegnamento (+=, -=, *=, /=)
 			if (peekChar() == '=') {
-				readChar(); // Consuma l'uguale
+				readChar(); 
 				return new Token(TokenType.OP_ASSIGN, String.valueOf(c) + "=", riga);
 			}
 			return new Token(operTkType.get(c), riga);
@@ -187,15 +160,12 @@ public class Scanner {
 		StringBuilder sb = new StringBuilder();
 		char c = peekChar();
 		
-		// Stato 2 dell'Automa: Lettura cifre intere
 		while (digits.contains(c)) {
 			sb.append(readChar());
 			c = peekChar();
 		}
-		
-		// Stato 6 dell'Automa: Floating point se incontra '.'
 		if (c == '.') {
-			sb.append(readChar()); // Consuma il '.'
+			sb.append(readChar()); 
 			c = peekChar();
 			int decimalCount = 0;
 			
@@ -205,7 +175,6 @@ public class Scanner {
 				c = peekChar();
 			}
 			
-			// Stato 8 (sink) dell'Automa: superate le 5 cifre
 			if (decimalCount > 5) {
 				throw new LexicalException("Errore alla riga " + riga + ": float con piu' di 5 cifre decimali");
 			}
@@ -213,7 +182,6 @@ public class Scanner {
 			return new Token(TokenType.FLOAT, sb.toString(), riga);
 		}
 		
-		// Se non c'è il punto, restituisce un Intero
 		return new Token(TokenType.INT, sb.toString(), riga);
 	}
 
